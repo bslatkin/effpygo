@@ -66,7 +66,7 @@ def index_words_generator(stream):
 ###
 
 def watch_for_status_change(it):
-    buffer = next(it)
+    buffer = next(it)  # Will do StopIteration if empty
     last_status = is_letter(buffer)
 
     for char in it:

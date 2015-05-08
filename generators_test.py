@@ -94,6 +94,10 @@ NO_ENDING_LETTER_EXPECTED = [
 
 class TestIndexWords(unittest.TestCase):
 
+    def testEmpty(self):
+        result = list(index_words(''))
+        self.assertListEqual([], result)
+
     def testBasic(self):
         result = index_words(ADDRESS)
         self.assertListEqual(ADDRESS_EXPECTED, result)
@@ -109,6 +113,10 @@ class TestIndexWords(unittest.TestCase):
 
 class TestIndexWordsGenerator(unittest.TestCase):
 
+    def testEmpty(self):
+        result = list(index_words_generator(io.StringIO('')))
+        self.assertListEqual([], result)
+
     def testBasic(self):
         result = list(index_words_generator(io.StringIO(ADDRESS)))
         self.assertListEqual(ADDRESS_EXPECTED, result)
@@ -123,6 +131,10 @@ class TestIndexWordsGenerator(unittest.TestCase):
 
 
 class TestIndexWordsStream(unittest.TestCase):
+
+    def testEmpty(self):
+        result = list(index_words_stream(io.StringIO('')))
+        self.assertListEqual([], result)
 
     def testBasic(self):
         result = list(index_words_stream(io.StringIO(ADDRESS)))

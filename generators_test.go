@@ -11,7 +11,7 @@ const (
 )
 
 func ExampleIndexWords() {
-	for _, word := range IndexWords(strings.NewReader(Address)) {
+	for _, word := range IndexWords(Address) {
 		fmt.Println(word)
 	}
 	// Output:
@@ -48,7 +48,7 @@ func ExampleIndexWords() {
 }
 
 func ExampleIndexWords_WithSpaces() {
-	for _, word := range IndexWords(strings.NewReader(AddressWithSpaces)) {
+	for _, word := range IndexWords(AddressWithSpaces) {
 		fmt.Println(word)
 	}
 	// Output:
