@@ -18,32 +18,40 @@ func isLetter(r rune) bool {
 
 // ---
 
-func IndexWords(text string) []Word {
-	var result []Word
+func IndexWords(text string) (result []Word) {
 	var buf []rune
 	var word Word
-	for i, r := range text {
-		if isLetter(r) {
-			if len(buf) == 0 {
-				// First character of a new word
-				word.Index = i
-			}
-			buf = append(buf, r)
-		} else {
-			if len(buf) > 0 {
-				// Current word is done
-				word.Text = string(buf)
-				result = append(result, word)
-				buf = make([]rune, 0)
-			}
+
+	checkFound := func() {
+		if len(buf) > 0 {
+			word.Text = string(buf)
+			result = append(result, word)
+			buf = make([]rune, 0)
 		}
 	}
-	if len(buf) > 0 {
-		// Output any leftover runes as a word
-		word.Text = string(buf)
-		result = append(result, word)
+
+	for i, r := range text {
+		if isLetter(r) {
+			// When the buffer was empty, but now we've found a
+			// rune that's part of a word, mark the index as the
+			// first character of a newly found word.
+			if len(buf) == 0 {
+				word.Index = i
+			}
+			// Append the rune to the current word's buffer.
+			buf = append(buf, r)
+		} else {
+			// When the current rune is not part of a word, then
+			// we may have reached the end of the word.
+			checkFound()
+		}
 	}
-	return result
+
+	// Any runes remaining in the buffer should be returned as part of a
+	// final found word.
+	checkFound()
+
+	return
 }
 
 // ---

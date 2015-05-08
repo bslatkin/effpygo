@@ -8,6 +8,7 @@ import (
 const (
 	Address           = "Four score and seven years ago our fathers brought forth on this continent a new nation, conceived in liberty, and dedicated to the proposition that all men are created equal."
 	AddressWithSpaces = "  Four score and seven years ago our fathers brought forth on this   continent a new nation, conceived in liberty, and dedicated to the proposition that all men are created equal.  "
+	NoEndingLetter    = "Four    score and    seven"
 )
 
 func ExampleIndexWords() {
@@ -82,6 +83,17 @@ func ExampleIndexWords_WithSpaces() {
 	// {161 are}
 	// {165 created}
 	// {173 equal}
+}
+
+func ExampleIndexWords_NoEndingLetter() {
+	for _, word := range IndexWords(NoEndingLetter) {
+		fmt.Println(word)
+	}
+	// Output:
+	// {0 Four}
+	// {8 score}
+	// {14 and}
+	// {21 seven}
 }
 
 func ExampleIndexWordsStream() {
