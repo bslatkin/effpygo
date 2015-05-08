@@ -34,16 +34,20 @@ def index_words(text):
     return result
 
 
-def index_words_generator(buffer):
-    index = 0
+def read_and_buffer(stream):
+    while True:
+        data = stream.read(1024)
+        if not data:
+            return
+        for char in data:
+            yield char
+
+
+def index_words_generator(stream):
     word_start = 0
     current = ''
 
-    while True:
-        char = buffer.read(1)
-        if not char:
-            break
-
+    for index, char in enumerate(read_and_buffer(stream)):
         if is_letter(char):
             if not current:
                 word_start = index
@@ -52,8 +56,6 @@ def index_words_generator(buffer):
             if current:
                 yield word_start, current
                 current = ''
-
-        index += 1
 
     if current:
         yield word_start, current

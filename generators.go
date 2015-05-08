@@ -12,14 +12,14 @@ type FoundWord struct {
 	Word  string
 }
 
-func isLetter(letter rune) bool {
-	return !(unicode.IsSpace(letter) || unicode.IsPunct(letter))
+func isLetter(r rune) bool {
+	return !(unicode.IsSpace(r) || unicode.IsPunct(r))
 }
 
 func IndexWords(text string) []FoundIndex {
 	result := make([]FoundIndex, 0)
-	var found FoundWord
 	var buf bytes.Buffer
+	var found FoundWord
 	for i, rune := range text {
 		if isLetter(rune) {
 			if buf.Len() == 0 {
