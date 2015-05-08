@@ -11,127 +11,149 @@ const (
 )
 
 func ExampleIndexWords() {
-	for _, found := range IndexWords(Address) {
-		fmt.Println(found)
+	for _, word := range IndexWords(strings.NewReader(Address)) {
+		fmt.Println(word)
 	}
 	// Output:
-	// {0 4}
-	// {5 5}
-	// {11 3}
-	// {15 5}
-	// {21 5}
-	// {27 3}
-	// {31 3}
-	// {35 7}
-	// {43 7}
-	// {51 5}
-	// {57 2}
-	// {60 4}
-	// {65 9}
-	// {75 1}
-	// {77 3}
-	// {81 6}
-	// {89 9}
-	// {99 2}
-	// {102 7}
-	// {111 3}
-	// {115 9}
-	// {125 2}
-	// {128 3}
-	// {132 11}
-	// {144 4}
-	// {149 3}
-	// {153 3}
-	// {157 3}
-	// {161 7}
-	// {169 5}
+	// {0 Four}
+	// {5 score}
+	// {11 and}
+	// {15 seven}
+	// {21 years}
+	// {27 ago}
+	// {31 our}
+	// {35 fathers}
+	// {43 brought}
+	// {51 forth}
+	// {57 on}
+	// {60 this}
+	// {65 continent}
+	// {75 a}
+	// {77 new}
+	// {81 nation}
+	// {89 conceived}
+	// {99 in}
+	// {102 liberty}
+	// {111 and}
+	// {115 dedicated}
+	// {125 to}
+	// {128 the}
+	// {132 proposition}
+	// {144 that}
+	// {149 all}
+	// {153 men}
+	// {157 are}
+	// {161 created}
+	// {169 equal}
 }
 
-func ExampleIndexWordsWithSpaces() {
-	text := AddressWithSpaces
-	indexes := IndexWords(text)
-	for _, found := range indexes {
-		word := text[found.Index : found.Index+found.Length]
-		fmt.Println(found.Index, word)
+func ExampleIndexWords_WithSpaces() {
+	for _, word := range IndexWords(strings.NewReader(AddressWithSpaces)) {
+		fmt.Println(word)
 	}
 	// Output:
-	// 2 Four
-	// 7 score
-	// 13 and
-	// 17 seven
-	// 23 years
-	// 29 ago
-	// 33 our
-	// 37 fathers
-	// 45 brought
-	// 53 forth
-	// 59 on
-	// 62 this
-	// 69 continent
-	// 79 a
-	// 81 new
-	// 85 nation
-	// 93 conceived
-	// 103 in
-	// 106 liberty
-	// 115 and
-	// 119 dedicated
-	// 129 to
-	// 132 the
-	// 136 proposition
-	// 148 that
-	// 153 all
-	// 157 men
-	// 161 are
-	// 165 created
-	// 173 equal
+	// {2 Four}
+	// {7 score}
+	// {13 and}
+	// {17 seven}
+	// {23 years}
+	// {29 ago}
+	// {33 our}
+	// {37 fathers}
+	// {45 brought}
+	// {53 forth}
+	// {59 on}
+	// {62 this}
+	// {69 continent}
+	// {79 a}
+	// {81 new}
+	// {85 nation}
+	// {93 conceived}
+	// {103 in}
+	// {106 liberty}
+	// {115 and}
+	// {119 dedicated}
+	// {129 to}
+	// {132 the}
+	// {136 proposition}
+	// {148 that}
+	// {153 all}
+	// {157 men}
+	// {161 are}
+	// {165 created}
+	// {173 equal}
 }
 
-func ExampleIndexWordsIntoChannel() {
-	for index := range IndexWordsIntoChannel(Address) {
-		fmt.Println(index)
+func ExampleIndexWordsStream() {
+	for word := range IndexWordsStream(strings.NewReader(Address)) {
+		fmt.Println(word)
 	}
 	// Output:
-	// 0
-	// 5
-	// 11
-	// 15
-	// 21
-	// 27
-	// 31
-	// 35
-	// 43
-	// 51
-	// 57
-	// 60
-	// 65
-	// 75
-	// 77
-	// 81
-	// 89
-	// 99
-	// 102
-	// 111
-	// 115
-	// 125
-	// 128
-	// 132
-	// 144
-	// 149
-	// 153
-	// 157
-	// 161
-	// 169
+	// {0 Four}
+	// {5 score}
+	// {11 and}
+	// {15 seven}
+	// {21 years}
+	// {27 ago}
+	// {31 our}
+	// {35 fathers}
+	// {43 brought}
+	// {51 forth}
+	// {57 on}
+	// {60 this}
+	// {65 continent}
+	// {75 a}
+	// {77 new}
+	// {81 nation}
+	// {89 conceived}
+	// {99 in}
+	// {102 liberty}
+	// {111 and}
+	// {115 dedicated}
+	// {125 to}
+	// {128 the}
+	// {132 proposition}
+	// {144 that}
+	// {149 all}
+	// {153 men}
+	// {157 are}
+	// {161 created}
+	// {169 equal}
 }
 
-func ExampleIndexWordsFromReaderIntoChannel() {
-	input := strings.NewReader(Address)
-	for found := range IndexWordsFromReaderIntoChannel(input) {
-		if found.Err != nil {
-			panic(found.Err)
-		}
-		fmt.Println(found)
+func ExampleIndexWordsStream_WithSpaces() {
+	for word := range IndexWordsStream(strings.NewReader(AddressWithSpaces)) {
+		fmt.Println(word)
 	}
 	// Output:
-	// asdf
+	// {2 Four}
+	// {7 score}
+	// {13 and}
+	// {17 seven}
+	// {23 years}
+	// {29 ago}
+	// {33 our}
+	// {37 fathers}
+	// {45 brought}
+	// {53 forth}
+	// {59 on}
+	// {62 this}
+	// {69 continent}
+	// {79 a}
+	// {81 new}
+	// {85 nation}
+	// {93 conceived}
+	// {103 in}
+	// {106 liberty}
+	// {115 and}
+	// {119 dedicated}
+	// {129 to}
+	// {132 the}
+	// {136 proposition}
+	// {148 that}
+	// {153 all}
+	// {157 men}
+	// {161 are}
+	// {165 created}
+	// {173 equal}
 }

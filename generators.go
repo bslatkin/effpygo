@@ -7,91 +7,69 @@ import (
 	"unicode"
 )
 
-type FoundWord struct {
+type Word struct {
 	Index int
-	Word  string
+	Text  string
 }
 
 func isLetter(r rune) bool {
 	return !(unicode.IsSpace(r) || unicode.IsPunct(r))
 }
 
-func IndexWords(text string) []FoundIndex {
-	result := make([]FoundIndex, 0)
+func readUntil(targetStatus bool, reader *bufio.Reader) string {
 	var buf bytes.Buffer
-	var found FoundWord
-	for i, rune := range text {
-		if isLetter(rune) {
-			if buf.Len() == 0 {
-				// First character of a new word
-				found.Index = i
-			}
-			if _, err := buf.WriteRune(r); err != nil {
-				panic(err)
-			}
-		} else {
-			if buf.Len() > 0 {
-				// Current word is done
-				found.Word = buf.String()
-				result = append(result, found)
-			}
+	for {
+		r, _, err := reader.ReadRune()
+		if err != nil {
+			break
 		}
+		if isLetter(r) == targetStatus {
+			reader.UnreadRune()
+			break
+		}
+		buf.WriteRune(r)
 	}
-	if buf.Len() > 0 {
-		// Output any leftover runes as a word
-		found.Word = buf.String()
-		result = append(result, found)
-	}
-	return result
+	return buf.String()
 }
 
-type FoundWordOrErr struct {
-	FoundWord
+func IndexWords(in io.Reader) []Word {
+	words := make([]Word, 0)
+	reader := bufio.NewReader(in)
+	index := 0
+	for {
+		whitespace := readUntil(true, reader)
+		index += len(whitespace)
+		text := readUntil(false, reader)
+		if len(text) == 0 {
+			break
+		}
+		words = append(words, Word{index, text})
+		index += len(text)
+	}
+	return words
+}
+
+type WordOrErr struct {
+	Word
 	Err error
 }
 
-func IndexWordsFromReaderIntoChannel(text io.Reader) <-chan FoundWordOrErr {
-	result := make(chan FoundWordOrErr)
+func IndexWordsStream(in io.Reader) <-chan Word {
+	out := make(chan Word)
 	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				result <- FoundWordOrErr{-1, "", err}
+		defer close(out)
+		reader := bufio.NewReader(in)
+		index := 0
+		for {
+			whitespace := readUntil(true, reader)
+			index += len(whitespace)
+			text := readUntil(false, reader)
+			if len(text) == 0 {
+				break
 			}
-		}()
-		defer close(result)
-
-		reader := bufio.NewReader(text)
-		var buf bytes.Buffer
-		var found FoundWord
-
-		for i := 0; ; i++ {
-			rune, _, err := reader.ReadRune()
-			if err == io.EOF {
-				// Output any remaining runes as the last word
-				if buf.Len() > 0 {
-					found.Word = buf.String()
-					result <- found
-				}
-				return
-			} else if err != nil {
-				panic(err)
-			}
-
-			if isLetter(rune) {
-				if buf.Len() == 0 {
-					found.Index = i
-				}
-				if _, err = buf.WriteRune(rune); err != nil {
-					panic(err)
-				}
-			} else {
-				if buf.Len() > 0 {
-					found.Word = buf.String()
-					result <- found
-					buf.Truncate(0)
-				}
-			}
+			out <- Word{index, text}
+			index += len(text)
 		}
 	}()
-	return result
+	return out
 }
