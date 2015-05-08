@@ -2,12 +2,14 @@ package effpygo
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"unicode"
 )
 
-type FoundIndex struct {
-	Index, Length int
+type FoundWord struct {
+	Index int
+	Word  string
 }
 
 func isLetter(letter rune) bool {
@@ -16,74 +18,79 @@ func isLetter(letter rune) bool {
 
 func IndexWords(text string) []FoundIndex {
 	result := make([]FoundIndex, 0)
-
-	lastIndex := -1
-	ignoreLetter := true
-	for index, letter := range text {
-		if ignoreLetter {
-			// Consume ignorable until the first letter of a word
-			if isLetter(letter) {
-				ignoreLetter = false
-				lastIndex = index
+	var found FoundWord
+	var buf bytes.Buffer
+	for i, rune := range text {
+		if isLetter(rune) {
+			if buf.Len() == 0 {
+				// First character of a new word
+				found.Index = i
+			}
+			if _, err := buf.WriteRune(r); err != nil {
+				panic(err)
 			}
 		} else {
-			// Consume letters from word until the first to ignore
-			if !isLetter(letter) {
-				ignoreLetter = true
-				result = append(result, FoundIndex{lastIndex, index - lastIndex})
+			if buf.Len() > 0 {
+				// Current word is done
+				found.Word = buf.String()
+				result = append(result, found)
 			}
 		}
 	}
-	if !ignoreLetter {
-		// The last word won't be output unless there is trailing whitespace
-		result = append(result, FoundIndex{lastIndex, len(text) - lastIndex})
+	if buf.Len() > 0 {
+		// Output any leftover runes as a word
+		found.Word = buf.String()
+		result = append(result, found)
 	}
 	return result
 }
 
-func IndexWordsIntoChannel(text string) <-chan int {
-	result := make(chan int)
+type FoundWordOrErr struct {
+	FoundWord
+	Err error
+}
+
+func IndexWordsFromReaderIntoChannel(text io.Reader) <-chan FoundWordOrErr {
+	result := make(chan FoundWordOrErr)
 	go func() {
-		defer close(result)
-		if len(text) > 0 {
-			result <- 0
-		}
-		for index, letter := range text {
-			if letter == ' ' {
-				result <- index + 1
+		defer func() {
+			if err := recover(); err != nil {
+				result <- FoundWordOrErr{-1, "", err}
 			}
-		}
-	}()
-	return result
-}
-
-type FoundWord struct {
-	Index int
-	Word  string
-	Err   error
-}
-
-func IndexWordsFromReaderIntoChannel(text io.Reader) <-chan FoundWord {
-	result := make(chan FoundWord)
-	go func() {
+		}()
 		defer close(result)
 
 		reader := bufio.NewReader(text)
-		index := 0
-		for {
-			next, err := reader.ReadString(' ')
+		var buf bytes.Buffer
+		var found FoundWord
+
+		for i := 0; ; i++ {
+			rune, _, err := reader.ReadRune()
 			if err == io.EOF {
+				// Output any remaining runes as the last word
+				if buf.Len() > 0 {
+					found.Word = buf.String()
+					result <- found
+				}
 				return
+			} else if err != nil {
+				panic(err)
 			}
-			if err != nil {
-				result <- FoundWord{-1, "", err}
-				return
+
+			if isLetter(rune) {
+				if buf.Len() == 0 {
+					found.Index = i
+				}
+				if _, err = buf.WriteRune(rune); err != nil {
+					panic(err)
+				}
+			} else {
+				if buf.Len() > 0 {
+					found.Word = buf.String()
+					result <- found
+					buf.Truncate(0)
+				}
 			}
-			trimmed := next[:len(next)-1]
-			if len(trimmed) > 0 {
-				result <- FoundWord{index, trimmed, nil}
-			}
-			index += len(next)
 		}
 	}()
 	return result
