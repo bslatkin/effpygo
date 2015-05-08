@@ -54,6 +54,52 @@ func IndexWords(text string) (result []Word) {
 
 // ---
 
+func IndexWordsFromStream(in io.Reader) (result []Word, err error) {
+	var word Word
+	reader := bufio.NewReader(in)
+
+	for i := 0; ; i++ {
+		var r rune
+		if r, _, err = reader.ReadRune(); err != nil {
+			if err != io.EOF {
+				// This is a real error that should be returned.
+				return
+			}
+			// The end of the input string is not an error.
+			err = nil
+			break
+		}
+
+		if isPartOfWord(r) {
+			// When the buffer was empty, but now we've found a
+			// rune that's part of a word, mark the index as the
+			// first character of a newly found word.
+			if len(word.Text) == 0 {
+				word.Index = i
+			}
+			// Always append the rune to the current word.
+			word.Text += string(r)
+		} else {
+			// When the current rune is whitespace or punctuation,
+			// then we may have reached the end of the word and
+			// need to save a new result.
+			if len(word.Text) > 0 {
+				result = append(result, word)
+				word.Text = ""
+			}
+		}
+	}
+
+	// Any runes remaining in the buffer after we've gone through the text
+	// should be returned as part of a final found word.
+	if len(word.Text) > 0 {
+		result = append(result, word)
+		word.Text = ""
+	}
+
+	return
+}
+
 // func getNext() rune {
 // 	r, _, err := reader.ReadRune()
 // 	if err != nil {
