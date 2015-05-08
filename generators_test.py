@@ -122,5 +122,20 @@ class TestIndexWordsGenerator(unittest.TestCase):
         self.assertListEqual(NO_ENDING_LETTER_EXPECTED, result)
 
 
+class TestIndexWordsStream(unittest.TestCase):
+
+    def testBasic(self):
+        result = list(index_words_stream(io.StringIO(ADDRESS)))
+        self.assertListEqual(ADDRESS_EXPECTED, result)
+
+    def testEdgeCases(self):
+        result = list(index_words_stream(io.StringIO(ADDRESS_WITH_SPACES)))
+        self.assertListEqual(ADDRESS_WITH_SPACES_EXPECTED, result)
+
+    def testNoEndingLetter(self):
+        result = list(index_words_stream(io.StringIO(NO_ENDING_LETTER)))
+        self.assertListEqual(NO_ENDING_LETTER_EXPECTED, result)
+
+
 if __name__ == '__main__':
     unittest.main()

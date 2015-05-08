@@ -12,6 +12,7 @@ def is_letter(char):
         return False
     return True
 
+###
 
 def index_words(text):
     result = []
@@ -33,6 +34,7 @@ def index_words(text):
 
     return result
 
+###
 
 def read_and_buffer(stream):
     while True:
@@ -60,3 +62,28 @@ def index_words_generator(stream):
     if current:
         yield word_start, current
 
+
+###
+
+def watch_for_status_change(it):
+    buffer = next(it)
+    last_status = is_letter(buffer)
+
+    for char in it:
+        next_status = is_letter(char)
+        if next_status != last_status:
+            yield last_status, buffer
+            last_status = next_status
+            buffer = ''
+        buffer += char
+
+    yield last_status, buffer
+
+
+def index_words_stream(stream):
+    word_start = 0
+    it = read_and_buffer(stream)
+    for was_text, word in watch_for_status_change(it):
+        if was_text:
+            yield word_start, word
+        word_start += len(word)
