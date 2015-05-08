@@ -54,18 +54,20 @@ func IndexWords(text string) (result []Word) {
 
 // ---
 
-func IndexWordsFromStream(in io.Reader) (result []Word, err error) {
+func IndexWordsFromStream(reader io.RuneReader) (result []Word, err error) {
 	var word Word
-	reader := bufio.NewReader(in)
 
 	for i := 0; ; i++ {
 		var r rune
 		if r, _, err = reader.ReadRune(); err != nil {
-			if err != io.EOF {
-				return
+			if err == io.EOF {
+				err = nil
+				if len(word.Text) > 0 {
+					result = append(result, word)
+					word.Text = ""
+				}
 			}
-			err = nil
-			break
+			return
 		}
 
 		if isPartOfWord(r) {
@@ -81,12 +83,32 @@ func IndexWordsFromStream(in io.Reader) (result []Word, err error) {
 		}
 	}
 
-	if len(word.Text) > 0 {
-		result = append(result, word)
-		word.Text = ""
-	}
-
 	return
+}
+
+// ---
+
+func readUntil(targetIsPartOfWord bool, reader io.RuneScanner) (string, error) {
+	var buf bytes.Buffer
+	for {
+		var r rune
+		if r, _, err := reader.ReadRune(); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", err
+		}
+		if isPartOfWord(r) == targetIsPartOfWord {
+			if err := reader.UnreadRune(); err != nil {
+				return "", err
+			}
+			break
+		}
+		if err := buf.WriteRune(r); err != nil {
+			return "", err
+		}
+	}
+	return buf.String(), nil
 }
 
 // ---
