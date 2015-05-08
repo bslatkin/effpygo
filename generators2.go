@@ -1,7 +1,7 @@
-package generators2
+package main
 
 import (
-	"csv"
+	"encoding/csv"
 	"fmt"
 	"io"
 	"strconv"
@@ -25,23 +25,27 @@ func recordToPoint(record []string) (p Point, err error) {
 	if err != nil {
 		return
 	}
+	return
 }
 
-func LoadCsvData(text string) (result []Point, err error) {
+func LoadCsvData(text string) ([]Point, error) {
+	var result []Point
 	reader := csv.NewReader(strings.NewReader(text))
 	records, err := reader.ReadAll()
 	if err != nil {
-		return
+		return nil, err
 	}
 	for _, record := range records {
 		point, err := recordToPoint(record)
 		if err != nil {
-			return
+			return nil, err
 		}
 		result = append(result, point)
 	}
-	return
+	return result, nil
 }
+
+// ---
 
 type recordOrErr struct {
 	record []string
@@ -74,15 +78,15 @@ type PointOrErr struct {
 }
 
 func LoadCsvDataToChannel(in io.Reader) <-chan PointOrErr {
-	out := make(chan Point)
+	out := make(chan PointOrErr)
 	go func() {
 		defer close(out)
 		for record := range loadCsvUntilEof(in) {
 			if record.err != nil {
-				out <- PointOrErr{Err: err}
+				out <- PointOrErr{Err: record.err}
 				return
 			}
-			point, err := recordToPoint(record)
+			point, err := recordToPoint(record.record)
 			if err != nil {
 				out <- PointOrErr{Err: err}
 				return
@@ -91,4 +95,26 @@ func LoadCsvDataToChannel(in io.Reader) <-chan PointOrErr {
 		}
 	}()
 	return out
+}
+
+// ---
+
+func main() {
+	data := "1.0,2.5\n3.5,4.1\n"
+
+	points, err := LoadCsvData(data)
+	if err != nil {
+		panic(err)
+	}
+	for _, point := range points {
+		fmt.Println(point)
+	}
+
+	results := LoadCsvDataToChannel(strings.NewReader(data))
+	for point := range results {
+		if point.Err != nil {
+			panic(point.Err)
+		}
+		fmt.Println(point.Point)
+	}
 }
