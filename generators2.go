@@ -47,31 +47,6 @@ func LoadCsvData(text string) ([]Point, error) {
 
 // ---
 
-type recordOrErr struct {
-	record []string
-	err    error
-}
-
-func loadCsvUntilEof(in io.Reader) <-chan recordOrErr {
-	out := make(chan recordOrErr)
-	go func() {
-		defer close(out)
-		reader := csv.NewReader(in)
-		for {
-			record, err := reader.Read()
-			if err == io.EOF {
-				return
-			}
-			if err != nil {
-				out <- recordOrErr{err: err}
-				return
-			}
-			out <- recordOrErr{record: record}
-		}
-	}()
-	return out
-}
-
 type PointOrErr struct {
 	Point
 	Err error
@@ -81,12 +56,17 @@ func LoadCsvDataToChannel(in io.Reader) <-chan PointOrErr {
 	out := make(chan PointOrErr)
 	go func() {
 		defer close(out)
-		for record := range loadCsvUntilEof(in) {
-			if record.err != nil {
-				out <- PointOrErr{Err: record.err}
+		reader := csv.NewReader(in)
+		for {
+			record, err := reader.Read()
+			if err == io.EOF {
 				return
 			}
-			point, err := recordToPoint(record.record)
+			if err != nil {
+				out <- PointOrErr{Err: err}
+				return
+			}
+			point, err := recordToPoint(record)
 			if err != nil {
 				out <- PointOrErr{Err: err}
 				return
@@ -102,6 +82,7 @@ func LoadCsvDataToChannel(in io.Reader) <-chan PointOrErr {
 func main() {
 	data := "1.0,2.5\n3.5,4.1\n"
 
+	// All at once example
 	points, err := LoadCsvData(data)
 	if err != nil {
 		panic(err)
@@ -110,6 +91,7 @@ func main() {
 		fmt.Println(point)
 	}
 
+	// Streaming example
 	results := LoadCsvDataToChannel(strings.NewReader(data))
 	for point := range results {
 		if point.Err != nil {

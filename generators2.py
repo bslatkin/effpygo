@@ -31,3 +31,38 @@ def load_csv_data_streaming(stream):
         if len(row) != 2:
             raise ValueError('Rows must have two entries')
         yield float(row[0]), float(row[1])
+
+
+def main():
+    data = "1.0,2.5\n3.5,4.1\n"
+
+    # Single load
+    try:
+        rows = load_csv_data(data)
+    except (ValueError, IOError):
+        print('Broke reading file')
+        raise
+
+    for i, row in enumerate(rows):
+        print('Row %d is %r' % (i, row))
+
+    # Streaming
+    stream = io.StringIO(data)
+    it = load_csv_data_streaming(stream)
+    i = 0
+    while True:
+        try:
+            row = next(it)
+        except StopIteration:
+            break
+        except (ValueError, IOError):
+            print('Broke on row %d' % i)
+            raise
+
+        print('Row %d is %r' % (i, row))
+        i += 1
+
+
+if __name__ == '__main__':
+    main()
+
