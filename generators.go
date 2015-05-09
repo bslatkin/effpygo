@@ -18,6 +18,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -93,16 +94,45 @@ func LoadCsvDataToChannel(in io.Reader) <-chan PointOrErr {
 
 // ---
 
+type DistanceOrErr struct {
+	Distance float64
+	Err      error
+}
+
+func PointDistanceToChannel(in <-chan PointOrErr) <-chan DistanceOrErr {
+	out := make(chan DistanceOrErr)
+	go func() {
+		defer close(out)
+		p := <-in
+		if p.Err != nil {
+			out <- DistanceOrErr{Err: p.Err}
+		}
+		for q := range in {
+			if q.Err != nil {
+				out <- DistanceOrErr{Err: p.Err}
+			}
+			dx := math.Pow(q.X-p.X, 2)
+			dy := math.Pow(q.Y-p.Y, 2)
+			distance := math.Sqrt(dx + dy)
+			out <- DistanceOrErr{Distance: distance}
+			p = q
+		}
+	}()
+	return out
+}
+
+// ---
+
 func main() {
-	data := "1.0,2.5\n3.5,4.1\n"
+	data := "1.0,2.5\n3.5,4.1\n7.5,2.2\n6.9,1.1\n"
 
 	// All at once example
 	points, err := LoadCsvData(strings.NewReader(data))
 	if err != nil {
 		panic(err)
 	}
-	for _, point := range points {
-		fmt.Println(point)
+	for i, point := range points {
+		fmt.Printf("Row %d is %v\n", i, point)
 	}
 
 	// Streaming example
@@ -112,5 +142,15 @@ func main() {
 			panic(point.Err)
 		}
 		fmt.Println(point.Point)
+	}
+
+	// Distance stream
+	pointStream := LoadCsvDataToChannel(strings.NewReader(data))
+	distances := PointDistanceToChannel(pointStream)
+	for distance := range distances {
+		if distance.Err != nil {
+			panic(distance.Err)
+		}
+		fmt.Println(distance.Distance)
 	}
 }

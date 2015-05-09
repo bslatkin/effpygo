@@ -15,7 +15,9 @@
 # limitations under the License.
 
 import csv
+import collections
 import io
+import math
 
 
 def load_csv_data(stream):
@@ -32,16 +34,24 @@ def load_csv_data_streaming(stream):
     for row in csv.reader(stream):
         if len(row) != 2:
             raise ValueError('Rows must have two entries')
-        yield float(row[0]), float(row[1])
+        point = float(row[0]), float(row[1])
+        yield point
+
+
+def distance_stream(it):
+    x, y = next(it)
+    for a, b in it:
+        yield math.sqrt((a - x) ** 2 + (b - y) ** 2)
+        x, y = a, b
 
 
 def main():
-    data = '1.0,2.5\n3.5,4.1\n'
+    data = '1.0,2.5\n3.5,4.1\n7.5,2.2\n6.9,1.1\n'
 
     # Single load
     try:
         rows = load_csv_data(io.StringIO(data))
-    except (ValueError, IOError) as e:
+    except (ValueError, IOError):
         raise Exception('Broke reading file')
 
     for i, row in enumerate(rows):
@@ -53,22 +63,27 @@ def main():
     try:
         for i, row in enumerate(it):
             print('Row %d is %r' % (i, row))
-    except (ValueError, IOError) as e:
+    except (ValueError, IOError):
         raise Exception('Broke reading file')
 
     # Streaming with explicit looping; shows which item was bad
     stream = io.StringIO(data)
-    it = load_csv_data_streaming(stream)
-    i = 0
+    it = enumerate(load_csv_data_streaming(stream))
     while True:
         try:
-            row = next(it)
+            i, row = next(it)
         except StopIteration:
             break
-        except (ValueError, IOError) as e:
-            raise Exception('Broke after row %d' % i)
+        except (ValueError, IOError):
+            raise Exception('Broke after row')
         else:
             print('Row %d is %r' % (i, row))
+
+    # Stream of the delta
+    stream = io.StringIO(data)
+    it = load_csv_data_streaming(stream)
+    for i, distance in enumerate(distance_stream(it)):
+        print('Move %d was %f far' % (i, distance))
 
 
 if __name__ == '__main__':
