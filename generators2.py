@@ -34,19 +34,27 @@ def load_csv_data_streaming(stream):
 
 
 def main():
-    data = "1.0,2.5\n3.5,4.1\n"
+    data = '1.0,2.5\n3.5,4.1\n'
 
     # Single load
     try:
         rows = load_csv_data(data)
-    except (ValueError, IOError):
-        print('Broke reading file')
-        raise
+    except (ValueError, IOError) as e:
+        raise Exception('Broke reading file')
 
     for i, row in enumerate(rows):
         print('Row %d is %r' % (i, row))
 
-    # Streaming
+    # Streaming with a nice loop construct
+    stream = io.StringIO(data)
+    it = load_csv_data_streaming(stream)
+    try:
+        for i, row in enumerate(it):
+            print('Row %d is %r' % (i, row))
+    except (ValueError, IOError) as e:
+        raise Exception('Broke reading file')
+
+    # Streaming with explicit looping; shows which item was bad
     stream = io.StringIO(data)
     it = load_csv_data_streaming(stream)
     i = 0
@@ -55,12 +63,10 @@ def main():
             row = next(it)
         except StopIteration:
             break
-        except (ValueError, IOError):
-            print('Broke on row %d' % i)
-            raise
-
-        print('Row %d is %r' % (i, row))
-        i += 1
+        except (ValueError, IOError) as e:
+            raise Exception('Broke after row %d' % i)
+        else:
+            print('Row %d is %r' % (i, row))
 
 
 if __name__ == '__main__':
