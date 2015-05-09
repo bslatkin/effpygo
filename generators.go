@@ -42,9 +42,9 @@ func recordToPoint(record []string) (p Point, err error) {
 	return
 }
 
-func LoadCsvData(text string) ([]Point, error) {
+func LoadCsvData(in io.Reader) ([]Point, error) {
 	var result []Point
-	reader := csv.NewReader(strings.NewReader(text))
+	reader := csv.NewReader(in)
 	records, err := reader.ReadAll()
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func main() {
 	data := "1.0,2.5\n3.5,4.1\n"
 
 	// All at once example
-	points, err := LoadCsvData(data)
+	points, err := LoadCsvData(strings.NewReader(data))
 	if err != nil {
 		panic(err)
 	}

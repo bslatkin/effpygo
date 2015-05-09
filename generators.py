@@ -18,10 +18,9 @@ import csv
 import io
 
 
-def load_csv_data(text):
+def load_csv_data(stream):
     result = []
-    reader = csv.reader(io.StringIO(text))
-    for row in reader:
+    for row in csv.reader(stream):
         if len(row) != 2:
             raise ValueError('Rows must have two entries')
         point = float(row[0]), float(row[1])
@@ -41,7 +40,7 @@ def main():
 
     # Single load
     try:
-        rows = load_csv_data(data)
+        rows = load_csv_data(io.StringIO(data))
     except (ValueError, IOError) as e:
         raise Exception('Broke reading file')
 
