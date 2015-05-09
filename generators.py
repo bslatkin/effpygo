@@ -20,7 +20,8 @@ import io
 
 def load_csv_data(text):
     result = []
-    for row in csv.reader(io.StringIO(text)):
+    reader = csv.reader(io.StringIO(text))
+    for row in reader:
         if len(row) != 2:
             raise ValueError('Rows must have two entries')
         point = float(row[0]), float(row[1])
