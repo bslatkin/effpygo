@@ -52,7 +52,7 @@ def main():
     try:
         rows = load_csv_data(io.StringIO(data))
     except (ValueError, IOError):
-        raise Exception('Broke reading file')
+        raise Exception('Broke reading CSV')
 
     for i, row in enumerate(rows):
         print('Row %d is %r' % (i, row))
@@ -64,7 +64,7 @@ def main():
         for i, row in enumerate(it):
             print('Row %d is %r' % (i, row))
     except (ValueError, IOError):
-        raise Exception('Broke reading file')
+        raise Exception('Broke reading CSV')
 
     # Streaming with explicit looping; shows which item was bad
     stream = io.StringIO(data)

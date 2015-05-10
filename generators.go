@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package effpygo
 
 import (
 	"encoding/csv"
@@ -20,7 +20,6 @@ import (
 	"io"
 	"math"
 	"strconv"
-	"strings"
 )
 
 type Point struct {
@@ -119,38 +118,4 @@ func PointDistanceToChannel(in <-chan PointOrErr) <-chan DistanceOrErr {
 		}
 	}()
 	return out
-}
-
-// ---
-
-func main() {
-	data := "1.0,2.5\n3.5,4.1\n7.5,2.2\n6.9,1.1\n"
-
-	// All at once example
-	points, err := LoadCsvData(strings.NewReader(data))
-	if err != nil {
-		panic(err)
-	}
-	for i, point := range points {
-		fmt.Printf("Row %d is %v\n", i, point)
-	}
-
-	// Streaming example
-	results := LoadCsvDataToChannel(strings.NewReader(data))
-	for point := range results {
-		if point.Err != nil {
-			panic(point.Err)
-		}
-		fmt.Println(point.Point)
-	}
-
-	// Distance stream
-	pointStream := LoadCsvDataToChannel(strings.NewReader(data))
-	distances := PointDistanceToChannel(pointStream)
-	for distance := range distances {
-		if distance.Err != nil {
-			panic(distance.Err)
-		}
-		fmt.Println(distance.Distance)
-	}
 }
