@@ -67,7 +67,7 @@ func LoadCsvDataToChannel(in io.Reader) <-chan Point {
 // ---
 
 func main() {
-	data := "1.0,2.5\n3.5,4.1\n"
+	data := "1.0,2.5\n3.5,4.1\n7.5,2.2\n6.9,1.1\n"
 
 	// All at once example
 	points := LoadCsvData(strings.NewReader(data))
