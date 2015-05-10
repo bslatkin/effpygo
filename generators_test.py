@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import timeit
 import unittest
 
 from generators import *
@@ -24,7 +25,7 @@ data = '1.0,2.5\n3.5,4.1\n7.5,2.2\n6.9,1.1\n'
 
 class Test(unittest.TestCase):
 
-    def testSingleLoad(self):
+    def test_single_load(self):
         try:
             rows = load_csv_data(io.StringIO(data))
         except (ValueError, IOError):
@@ -33,7 +34,7 @@ class Test(unittest.TestCase):
         for i, row in enumerate(rows):
             print('Row %d is %r' % (i, row))
 
-    def testStreaming(self):
+    def test_streaming(self):
         stream = io.StringIO(data)
         it = load_csv_data_streaming(stream)
         try:
@@ -42,7 +43,7 @@ class Test(unittest.TestCase):
         except (ValueError, IOError):
             raise Exception('Broke reading CSV')
 
-    def testExplicitLooping(self):
+    def test_explicit_looping(self):
         stream = io.StringIO(data)
         it = enumerate(load_csv_data_streaming(stream))
         while True:
@@ -55,11 +56,42 @@ class Test(unittest.TestCase):
             else:
                 print('Row %d is %r' % (i, row))
 
-    def testDistance(self):
+    def test_distance(self):
         stream = io.StringIO(data)
         it = load_csv_data_streaming(stream)
         for i, distance in enumerate(distance_stream(it)):
             print('Move %d was %f far' % (i, distance))
+
+
+SETUP = """
+import io
+import generators
+data = "1.5,2.5\\n" * 100000
+"""
+
+
+class Benchmark(unittest.TestCase):
+
+    def test_single_load(self):
+        delay = timeit.timeit(
+stmt="""
+stream = io.StringIO(data)
+generators.load_csv_data(stream)
+""",
+setup=SETUP,
+            number=20)
+        print('test_single_load: %f per call' % delay)
+
+    def test_streaming(self):
+        delay = timeit.timeit(
+stmt="""
+stream = io.StringIO(data)
+for _ in generators.load_csv_data_streaming(stream):
+    pass
+""",
+setup=SETUP,
+            number=20)
+        print('test_streaming: %f per call' % delay)
 
 
 if __name__ == '__main__':
