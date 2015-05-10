@@ -1,8 +1,10 @@
 package effpygo
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
+	"testing"
 )
 
 const (
@@ -56,4 +58,34 @@ func ExampleDistance() {
 	// Move 0 was 2.968164 far
 	// Move 1 was 4.428318 far
 	// Move 2 was 1.252996 far
+}
+
+func getCsvData() string {
+	var buf bytes.Buffer
+	for i := 0; i < 100000; i++ {
+		_, err := buf.WriteString("1.5,2.5\n")
+		if err != nil {
+			panic(err)
+		}
+	}
+	return buf.String()
+}
+
+func BenchmarkAllAtOnce(b *testing.B) {
+	data := getCsvData()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		LoadCsvData(strings.NewReader(data))
+	}
+}
+
+func BenchmarkStreaming(b *testing.B) {
+	data := getCsvData()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		points := LoadCsvDataToChannel(strings.NewReader(data))
+		for _ = range points {
+			// Do nothing
+		}
+	}
 }
