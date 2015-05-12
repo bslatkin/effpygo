@@ -31,12 +31,10 @@ func recordToPoint(record []string) (p Point, err error) {
 		err = fmt.Errorf("Records must have two columns")
 		return
 	}
-	p.X, err = strconv.ParseFloat(record[0], 64)
-	if err != nil {
+	if p.X, err = strconv.ParseFloat(record[0], 64); err != nil {
 		return
 	}
-	p.Y, err = strconv.ParseFloat(record[1], 64)
-	if err != nil {
+	if p.Y, err = strconv.ParseFloat(record[1], 64); err != nil {
 		return
 	}
 	return
