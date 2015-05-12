@@ -98,8 +98,10 @@ func BenchmarkStreaming(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		points := LoadCsvDataToChannel(strings.NewReader(data))
-		for _ = range points {
-			// Do nothing
+		for p := range points {
+			if p.Err != nil {
+				panic(p.Err)
+			}
 		}
 	}
 }
