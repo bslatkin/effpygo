@@ -20,6 +20,10 @@ import unittest
 from generators import *
 
 
+class MyException(Exception):
+    pass
+
+
 data = '1.0,2.5\n3.5,4.1\n7.5,2.2\n6.9,1.1\n'
 
 
@@ -29,7 +33,7 @@ class Test(unittest.TestCase):
         try:
             rows = load_csv_data(io.StringIO(data))
         except (ValueError, IOError):
-            raise Exception('Broke reading CSV')
+            raise MyException('Broke reading CSV')
 
         for i, row in enumerate(rows):
             print('Row %d is %r' % (i, row))
@@ -41,7 +45,7 @@ class Test(unittest.TestCase):
             for i, row in enumerate(it):
                 print('Row %d is %r' % (i, row))
         except (ValueError, IOError):
-            raise Exception('Broke reading CSV')
+            raise MyException('Broke reading CSV')
 
     def test_explicit_looping(self):
         stream = io.StringIO(data)
