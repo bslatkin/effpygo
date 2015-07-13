@@ -74,6 +74,53 @@ func ExampleDistance() {
 	// Move 2 was 1.252996 far
 }
 
+func TestDistanceBadFirstPoint(t *testing.T) {
+	pointStream := make(chan PointOrErr)
+	go func() {
+		pointStream <- PointOrErr{Err: fmt.Errorf("Bad first point")}
+		close(pointStream)
+	}()
+	distances := PointDistanceToChannel(pointStream)
+	found := <-distances
+	if found.Err.Error() != "Bad first point" {
+		t.Fail()
+	}
+	if _, open := <-distances; open {
+		t.Fail()
+	}
+}
+
+func TestDistanceBadLaterPoint(t *testing.T) {
+	pointStream := make(chan PointOrErr)
+	go func() {
+		pointStream <- PointOrErr{Point: Point{1.0, 0.0}}
+		pointStream <- PointOrErr{Point: Point{4.0, 0.0}}
+		pointStream <- PointOrErr{Err: fmt.Errorf("Bad point")}
+		pointStream <- PointOrErr{Point: Point{10.0, 0.0}}
+		close(pointStream)
+	}()
+	distances := PointDistanceToChannel(pointStream)
+
+	found := <-distances
+	if found.Distance != 3.0 {
+		t.Fatalf("First output was %#v", found)
+	}
+
+	found = <-distances
+	if !(found.Err != nil && found.Err.Error() == "Bad point") {
+		t.Fatalf("Second output was %#v", found)
+	}
+
+	found = <-distances
+	if found.Distance != 6.0 {
+		t.Fatalf("Third output was %#v", found)
+	}
+
+	if _, open := <-distances; open {
+		t.Fail()
+	}
+}
+
 func getCsvData() string {
 	var buf bytes.Buffer
 	for i := 0; i < 100000; i++ {

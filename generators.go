@@ -106,7 +106,8 @@ func PointDistanceToChannel(in <-chan PointOrErr) <-chan DistanceOrErr {
 		}
 		for q := range in {
 			if q.Err != nil {
-				out <- DistanceOrErr{Err: p.Err}
+				out <- DistanceOrErr{Err: q.Err}
+				continue
 			}
 			dx := math.Pow(q.X-p.X, 2)
 			dy := math.Pow(q.Y-p.Y, 2)
